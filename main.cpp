@@ -26,18 +26,10 @@ static std::string getTrainingData() {
     return buffer.str();
 }
 
-namespace {
-    template <typename ENCODED_TYPE, typename DECODED_TYPE>
-    struct Token {
-        ENCODED_TYPE encoded;
-        DECODED_TYPE decoded;
-    };
-}
-
 int main() {
 
     const std::string content{getTrainingData()};
-    mini_gpt::AsciiTokenizer x = mini_gpt::AsciiTokenizer::createAsciiTokenizerFromString(content);
+    mini_gpt::DenseTokeniserVocabulary x { mini_gpt::DenseTokenizer::createDenseTokenFromString(content) };
 
     return 0;
 }
