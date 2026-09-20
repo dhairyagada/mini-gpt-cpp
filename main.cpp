@@ -29,7 +29,11 @@ static std::string getTrainingData() {
 int main() {
 
     const std::string content{getTrainingData()};
-    mini_gpt::DenseTokeniserVocabulary x { mini_gpt::DenseTokenizer::createDenseTokenFromString(content) };
+    gpt::DenseTokeniserVocabulary vocab { gpt::DenseTokenizer::createDenseTokenFromString(content) };
+
+    const auto& encodedContent = vocab.tokenizer.encodeContentForModel(content);
+    const auto& decodedContent = vocab.tokenizer.decodeContentForHuman(encodedContent);
+    const std::string_view decodedStringBack{decodedContent.begin(),decodedContent.end()};
 
     return 0;
 }

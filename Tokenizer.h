@@ -2,13 +2,13 @@
 // Created by Dhairya Gada on 17.09.26.
 //
 
-#ifndef MINI_GPT_TOKENIZER_H
-#define MINI_GPT_TOKENIZER_H
+#pragma once
+
 #include <algorithm>
 #include <cstdint>
 #include <vector>
 
-namespace mini_gpt {
+namespace gpt {
 
     template <typename ENCODED_TYPE, typename DECODED_TYPE>
     struct Token {
@@ -30,10 +30,6 @@ namespace mini_gpt {
        static constexpr denseToken::encodedType ENCODED_VALUE_DEFAULT = 0;
        static constexpr denseToken::decodedType DECODED_VALUE_DEFAULT = '\0';
 
-       DenseTokenizer() {
-           tokens.emplace_back(ENCODED_VALUE_DEFAULT,DECODED_VALUE_DEFAULT);
-       }
-
        void createToken(const denseToken::decodedType decoded) {
            const auto it = std::ranges::find_if(tokens, [&decoded](denseToken& a) {
                return a.decoded == decoded;
@@ -45,9 +41,9 @@ namespace mini_gpt {
        }
 
        // Encoded Value is the Model Friendly Value
-       denseToken::encodedType getEncodedValue(denseToken::decodedType decoded) {
+       [[nodiscard]] denseToken::encodedType getEncodedValue(denseToken::decodedType decoded) const {
 
-           const auto it = std::ranges::find_if(tokens, [&decoded](denseToken& a) {
+           const auto it = std::ranges::find_if(tokens, [&decoded](const denseToken& a) {
                return a.decoded == decoded;
            });
 
@@ -59,9 +55,9 @@ namespace mini_gpt {
        }
 
        // Decoded Value is the Human Friendly Value
-       denseToken::decodedType getDecodedValue(denseToken::encodedType encoded) {
+       [[nodiscard]] denseToken::decodedType getDecodedValue(denseToken::encodedType encoded) const {
 
-           const auto it = std::ranges::find_if(tokens, [&encoded](denseToken& a) {
+           const auto it = std::ranges::find_if(tokens, [&encoded](const denseToken& a) {
                return a.encoded == encoded;
            });
 
@@ -79,6 +75,26 @@ namespace mini_gpt {
             }
             return tokenizer;
        }
+
+       [[nodiscard]] std::vector<denseToken::encodedType> encodeContentForModel(const std::string_view humanString) const {
+           std::vector<denseToken::encodedType> encodedVector;
+           encodedVector.reserve(humanString.size());
+
+           for (auto &c : humanString) {
+               encodedVector.push_back(getEncodedValue(c));
+           }
+           return encodedVector;
+       }
+
+       [[nodiscard]] std::vector<denseToken::decodedType> decodeContentForHuman(const std::vector<denseToken::encodedType>& encodedVector) const {
+           std::vector<denseToken::decodedType> decodedVector;
+           decodedVector.reserve(encodedVector.size());
+
+           for (auto &c : encodedVector) {
+               decodedVector.push_back(getDecodedValue(c));
+           }
+           return decodedVector;
+       }
    };
 
     struct DenseTokeniserVocabulary {
@@ -87,11 +103,10 @@ namespace mini_gpt {
         size_t vocabularySize{0};
 
         explicit DenseTokeniserVocabulary(DenseTokenizer&& _tokenizer) : tokenizer(_tokenizer) {
-            bosToken = tokenizer.tokens.size() + 1;
+            bosToken = tokenizer.tokens.size();
             vocabularySize = tokenizer.tokens.size() + 1;
         }
     };
 
 }
 
-#endif //MINI_GPT_TOKENIZER_H
